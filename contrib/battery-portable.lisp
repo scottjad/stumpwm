@@ -43,6 +43,8 @@
   (:use :common-lisp :stumpwm :cl-ppcre)
   (:export #:*refresh-time*
            #:*prefer-sysfs*
+           #:*no-battery-message*
+           #:*unknown-battery-message*
            ))
 (in-package :stumpwm.contrib.battery-portable)
 
@@ -57,6 +59,12 @@
 (defvar *prefer-sysfs* t
   "Prefer sysfs over procfs for information gathering. This has effect
   only on Linux.")
+
+(defvar *no-battery-message* "(no battery)"
+  "String to display in mode-line when there is no battery.")
+
+(defvar *unknown-battery-message* "(no info)"
+  "String to display in mode-line when state is unknown.")
 
 ;;; Method base class
 
@@ -310,13 +318,13 @@
                                         (return-from battery-info-string
                                           "(not implemented)")))))
       (if (endp batteries)
-          (format fmt "(no battery)")
+          (format fmt *no-battery-message*)
           (loop
              for bat in batteries
              do (multiple-value-bind (state perc time)
                     (state-of bat)
                   (ecase state
-                    (:unknown (format fmt "(no info)"))
+                    (:unknown (format fmt *unknown-battery-message*))
                     (:charged (format fmt "~~ ~D%" (round perc)))
                     ((:charging :discharging)
                      (format fmt "~/stumpwm.contrib.battery-portable::fmt-time/~A ^[~A~D%^]"
